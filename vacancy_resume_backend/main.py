@@ -9,7 +9,7 @@ app = FastAPI()
 
 CONNECTION_STRING = "postgresql+psycopg2://syash:2004@localhost:5432/resumes"
 COLLECTION_NAME = "similarity_search_test"
-os.environ["OPENAI_API_KEY"] = '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'
+os.environ["OPENAI_API_KEY"] = ''
 
 embeddings = OpenAIEmbeddings()
 STORE = PGVector(
