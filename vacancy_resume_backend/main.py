@@ -3,13 +3,15 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
 import os
-from docx import Document
+import sys
+import docx
+
 
 app = FastAPI()
 
 CONNECTION_STRING = "postgresql+psycopg2://syash:2004@localhost:5432/resumes"
 COLLECTION_NAME = "similarity_search_test"
-os.environ["OPENAI_API_KEY"] = ''
+os.environ["OPENAI_API_KEY"] = sys.argv[1]
 
 embeddings = OpenAIEmbeddings()
 STORE = PGVector(
@@ -30,7 +32,7 @@ async def upload_file(file: UploadFile):
 @app.get("/score_resume/")
 async def resumes_with_score(file: UploadFile):
     if file.filename.endswith('.docx'):
-        doc = Document(file.file._file)
+        doc = docx.Document(file.file._file)
         file_content = ""
         for paragraph in doc.paragraphs:
             file_content += paragraph.text + "\n"
@@ -48,7 +50,6 @@ async def resumes_with_score(file: UploadFile):
     return [(score, doc.page_content) for doc, score in docs_with_score]
 
 
-if __name__ == "__main__":
+def main():
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
-
