@@ -52,4 +52,4 @@ async def resumes_with_score(file: UploadFile):
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=30_000)
