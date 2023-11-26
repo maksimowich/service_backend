@@ -3,12 +3,13 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
 import os
+from docx import Document
 
 app = FastAPI()
 
 CONNECTION_STRING = "postgresql+psycopg2://syash:2004@localhost:5432/resumes"
-COLLECTION_NAME = "test"
-os.environ["OPENAI_API_KEY"] = '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'
+COLLECTION_NAME = "similarity_search_test"
+os.environ["OPENAI_API_KEY"] = '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'
 
 embeddings = OpenAIEmbeddings()
 STORE = PGVector(
@@ -17,21 +18,9 @@ STORE = PGVector(
     embedding_function=embeddings,
 )
 
-def print_json(json_data):
-    for key, value in json_data:
-        print(f'{key}: ')
-        if isinstance(value, str):
-            print(value)
-        elif isinstance(value, list):
-            for item in value:
-                print(item)
-        else:
-            print_json(value)
-
 @app.post("/upload_resume/")
 async def upload_file(file: UploadFile):
     file_content = file.file.read().decode("utf-8")
-    print(file_content)
     if file:
         STORE.add_documents([Document(page_content=file_content)])
         return {"message": "File uploaded and saved successfully"}
@@ -39,8 +28,17 @@ async def upload_file(file: UploadFile):
         return {"message": "No file uploaded"}
 
 @app.get("/score_resume/")
-async def resumes_with_score(file: UploadFile, ):
-    file_content = file.file.read().decode("utf-8")
+async def resumes_with_score(file: UploadFile):
+    if file.filename.endswith('.docx'):
+        doc = Document(file.file._file)
+        file_content = ""
+        for paragraph in doc.paragraphs:
+            file_content += paragraph.text + "\n"
+    else:
+        file_content = file.file.read().decode("utf-8")
+
+    print(file_content)
+
     docs_with_score = STORE.similarity_search_with_score(file_content, 5)
     for doc, score in docs_with_score:
         print("-" * 80)
@@ -53,3 +51,4 @@ async def resumes_with_score(file: UploadFile, ):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
+
