@@ -10,7 +10,7 @@ import docx
 app = FastAPI()
 
 CONNECTION_STRING = "postgresql+psycopg2://syash:2004@localhost:5432/resumes"
-COLLECTION_NAME = "similarity_search_test"
+COLLECTION_NAME = sys.argv[2]
 os.environ["OPENAI_API_KEY"] = sys.argv[1]
 
 embeddings = OpenAIEmbeddings()
