@@ -36,6 +36,8 @@ async def resumes_with_score(file: UploadFile):
         file_content = ""
         for paragraph in doc.paragraphs:
             file_content += paragraph.text + "\n"
+    elif file.filename.endswith('.pdf'):
+        print(1)
     else:
         file_content = file.file.read().decode("utf-8")
 

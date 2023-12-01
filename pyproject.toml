@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vacancy-resume-backend"
-version = "0.1.6"
+version = "0.1.7"
 description = ""
 authors = ["Alexander <cahr2001@mail.ru>"]
 packages = [{include = "vacancy_resume_backend"}]
