@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "vacancy-resume-backend"
+version = "0.1.7"
+description = ""
+authors = ["Alexander <cahr2001@mail.ru>"]
+packages = [{include = "vacancy_resume_backend"}]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+fastapi = "^0.104.0"
+langchain = "0.0.314"
+tiktoken = "^0.5.1"
+uvicorn = "^0.23.2"
+psycopg2-binary = "^2.9.9"
+pgvector = "^0.2.3"
+python-multipart = "^0.0.6"
+python-docx = "^1.1.0"
+openai = "0.28.1"
+pdfminer-six = "^20221105"
+
+[tool.poetry.scripts]
+start-backend = "vacancy_resume_backend.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
