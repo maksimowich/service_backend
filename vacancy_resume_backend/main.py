@@ -2,16 +2,10 @@ from fastapi import FastAPI, UploadFile, File
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
-import os
 from vacancy_resume_backend.parser import generate_json_from_file, RESUME_JSON_TEMPLATE, VACANCY_JSON_TEMPLATE
-import sys
-
+from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, HOST, PORT
 app = FastAPI()
 
-CONNECTION_STRING = "postgresql+psycopg2://syash:2004@localhost:5432/resumes"
-COLLECTION_NAME = "search_vacancy"
-os.environ["OPENAI_API_KEY"] = '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'
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 embeddings = OpenAIEmbeddings()
 STORE = PGVector(
@@ -70,9 +64,6 @@ async def resumes_with_score(file: UploadFile):
 
 @app.get("/score_vacancy/")
 async def vacancies_with_score(file: UploadFile):
-    with open('/home/sasha/PycharmProjects/data/docs/Шубочкин.pdf', 'wb') as file_to_save:
-        file_to_save.write(file.file._file.getvalue())
-
     if file.filename.endswith('.pdf'):
         file_content = generate_json_from_file(file.file._file, RESUME_JSON_TEMPLATE, OPENAI_API_KEY, doc_type='резюме')
     else:
@@ -92,4 +83,4 @@ async def vacancies_with_score(file: UploadFile):
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host=HOST, port=PORT)
