@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, UploadFile, File
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
@@ -6,6 +8,7 @@ from vacancy_resume_backend.parser import generate_json_from_file, RESUME_JSON_T
 from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, HOST, PORT
 app = FastAPI()
 
+os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
 
 embeddings = OpenAIEmbeddings()
 STORE = PGVector(
