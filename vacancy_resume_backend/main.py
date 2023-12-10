@@ -19,6 +19,7 @@ STORE = PGVector(
 
 @app.post("/upload_resume/")
 async def upload_resume(file: UploadFile):
+    print(1)
     if file.filename.endswith('.pdf'):
         file_content = generate_json_from_file(file.file._file, RESUME_JSON_TEMPLATE, OPENAI_API_KEY, doc_type='резюме')
     else:
