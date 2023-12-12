@@ -125,7 +125,7 @@ def generate_json_from_text(text, json_template, openai_api_key, doc_type):
     # Make the API request
     headers = {"Authorization": f"Bearer {openai_api_key}", "Content-Type": "application/json"}
     data = {
-        "model": "gpt-3.5-turbo-1106",
+        "model": "gpt-3.5-turbo-16k",
         "messages": [
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": prompt}
