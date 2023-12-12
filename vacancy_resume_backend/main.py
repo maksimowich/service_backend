@@ -7,7 +7,7 @@ from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
 from vacancy_resume_backend.parser import generate_json_from_file, RESUME_JSON_TEMPLATE, VACANCY_JSON_TEMPLATE
 from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, HOST, PORT
-from response import zipfiles
+from vacancy_resume_backend.response import zipfiles
 app = FastAPI()
 
 os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
