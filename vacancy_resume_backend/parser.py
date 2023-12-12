@@ -130,7 +130,7 @@ def generate_json_from_text(text, json_template, openai_api_key, doc_type):
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": prompt}
         ],
-        "max_tokens": 2048  # Adjust as needed
+        "max_tokens": 4096  # Adjust as needed
     }
     response = requests.post(api_endpoint, headers=headers, json=data)
 
