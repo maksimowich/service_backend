@@ -6,7 +6,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
 from vacancy_resume_backend.parser import generate_json_from_file, RESUME_JSON_TEMPLATE, VACANCY_JSON_TEMPLATE
-from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, HOST, PORT
+from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, STORAGE_PATH
 from vacancy_resume_backend.response import zipfiles
 app = FastAPI()
 
@@ -29,11 +29,10 @@ async def upload_resume(file: UploadFile):
     print(file_content)
 
     if file:
-        path = f'/home/sasha/PycharmProjects/data/docs/resume_storage/{file.filename}.pdf'
+        path = STORAGE_PATH + str(len(os.listdir(STORAGE_PATH))) + '.pdf'
         doc = Document(page_content=file_content, metadata={
             'path': path})
-        uuid = STORE.add_documents([doc])[0]
-        # doc.metadata['path'] = path
+        STORE.add_documents([doc])[0]
         with open(path, 'wb') as doc_file:
             doc_file.write(file.file._file.getvalue())
         return {"message": "File uploaded and saved successfully"}
