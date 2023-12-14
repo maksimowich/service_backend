@@ -65,7 +65,12 @@ async def upload_vacancy(file: UploadFile):
     print(file_content)
 
     if file:
-        STORE.add_documents([Document(page_content=file_content)])
+        path = STORAGE_PATH + str(len(os.listdir(STORAGE_PATH))) + '.pdf'
+        doc = Document(page_content=file_content, metadata={
+            'path': path})
+        STORE.add_documents([doc])[0]
+        with open(path, 'wb') as doc_file:
+            doc_file.write(file.file._file.getvalue())
         return {"message": "File uploaded and saved successfully"}
     else:
         return {"message": "No file uploaded"}
@@ -115,19 +120,16 @@ async def vacancies_with_score(file: UploadFile):
     print(file_content)
 
     paths = []
-
     docs_with_score = STORE.similarity_search_with_score(file_content, 10)
     for doc, score in docs_with_score:
         print("-" * 80)
         print("Score: ", score)
-        # print(doc.page_content)
-        print(doc.uuid)
+        print(doc.page_content)
         print("-" * 80)
 
-    paths = ['/home/sasha/PycharmProjects/data/docs/Шубочкин.pdf',
-             "/home/sasha/PycharmProjects/data/docs/Резюме_Data_Scientist_Антон_Александрович_Картавцев_от_01_12_2023.pdf"]
-    return zipfiles(paths)
+        paths.append(doc.metadata['path'])
 
+    return zipfiles(paths)
 
 
 def main():

@@ -8,7 +8,6 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
-from openai import OpenAI
 
 RESUME_JSON_TEMPLATE = """{
     "birth_date": "",
