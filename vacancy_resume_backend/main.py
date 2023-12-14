@@ -5,7 +5,7 @@ from pathlib import Path
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
-from vacancy_resume_backend.parser import generate_json_from_file, RESUME_JSON_TEMPLATE, VACANCY_JSON_TEMPLATE
+from vacancy_resume_backend.parser import generate_json_from_text, get_text, RESUME_JSON_TEMPLATE, VACANCY_JSON_TEMPLATE
 from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, STORAGE_PATH
 from vacancy_resume_backend.response import zipfiles
 app = FastAPI()
@@ -22,7 +22,15 @@ STORE = PGVector(
 @app.post("/upload_resume/")
 async def upload_resume(file: UploadFile):
     if file.filename.endswith('.pdf'):
-        file_content = generate_json_from_file(file.file._file, RESUME_JSON_TEMPLATE, OPENAI_API_KEY, doc_type='резюме')
+        file_content = get_text(file.file._file)
+        try:
+            file_content = generate_json_from_text(
+                file_content,
+                RESUME_JSON_TEMPLATE,
+                OPENAI_API_KEY,
+                doc_type='резюме')
+        except:
+            pass
     else:
         file_content = file.file.read().decode("utf-8")
 
@@ -42,7 +50,15 @@ async def upload_resume(file: UploadFile):
 @app.post("/upload_vacancy/")
 async def upload_vacancy(file: UploadFile):
     if file.filename.endswith('.pdf'):
-        file_content = generate_json_from_file(file.file._file, VACANCY_JSON_TEMPLATE, OPENAI_API_KEY, doc_type='вакансия')
+        file_content = get_text(file.file._file)
+        try:
+            file_content = generate_json_from_text(
+                file_content,
+                VACANCY_JSON_TEMPLATE,
+                OPENAI_API_KEY,
+                doc_type='вакансия')
+        except:
+            pass
     else:
         file_content = file.file.read().decode("utf-8")
 
@@ -57,7 +73,15 @@ async def upload_vacancy(file: UploadFile):
 @app.get("/score_resume/")
 async def resumes_with_score(file: UploadFile):
     if file.filename.endswith('.pdf'):
-        file_content = generate_json_from_file(file.file._file, VACANCY_JSON_TEMPLATE, OPENAI_API_KEY, doc_type='вакансия')
+        file_content = get_text(file.file._file)
+        try:
+            file_content = generate_json_from_text(
+                file_content,
+                VACANCY_JSON_TEMPLATE,
+                OPENAI_API_KEY,
+                doc_type='вакансия')
+        except:
+            pass
     else:
         file_content = file.file.read().decode("utf-8")
 
@@ -76,7 +100,15 @@ async def resumes_with_score(file: UploadFile):
 @app.get("/score_vacancy/")
 async def vacancies_with_score(file: UploadFile):
     if file.filename.endswith('.pdf'):
-        file_content = generate_json_from_file(file.file._file, RESUME_JSON_TEMPLATE, OPENAI_API_KEY, doc_type='резюме')
+        file_content = get_text(file.file._file)
+        try:
+            file_content = generate_json_from_text(
+                file_content,
+                RESUME_JSON_TEMPLATE,
+                OPENAI_API_KEY,
+                doc_type='резюме')
+        except:
+            pass
     else:
         file_content = file.file.read().decode("utf-8")
 
