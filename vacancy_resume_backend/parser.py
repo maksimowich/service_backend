@@ -10,7 +10,6 @@ from pdfminer.pdfparser import PDFParser
 
 from openai import OpenAI
 
-
 RESUME_JSON_TEMPLATE = """{
     "birth_date": "",
     "gender": "",
@@ -23,13 +22,13 @@ RESUME_JSON_TEMPLATE = """{
         }
     ],
     "salary": {
-        "amount": null,
-        "currency": null
+        "amount": "",
+        "currency": ""
     },
     "education_level": "",
     "education": [
         {
-            "year": null,
+            "year": "",
             "name": "",
             "organization": ""
         }
@@ -44,7 +43,7 @@ RESUME_JSON_TEMPLATE = """{
         {
             "company": "",
             "start": "",
-            "end": null,
+            "end": "",
             "position": "",
             "description": ""
         }
@@ -63,10 +62,10 @@ VACANCY_JSON_TEMPLATE = """{
         "name": ""
     },
     "salary": {
-        "to": null,
-        "from": null,
+        "to": "",
+        "from": "",
         "currency": "",
-        "gross": null
+        "gross": ""
     },
     "name": "",
     "area": {
@@ -105,6 +104,7 @@ VACANCY_JSON_TEMPLATE = """{
     ]
 }"""
 
+
 def is_header_footer(text):
     keys = ['Приглашен на вакансию:', 'Резюме обновлено', 'Resume updated']
     for key in keys:
@@ -130,26 +130,48 @@ def get_text(pdf_file):
 
 
 def generate_json_from_text(text, json_template, openai_api_key, doc_type='резюме'):
-    client = OpenAI(api_key=openai_api_key)
+    # client = OpenAI(api_key=openai_api_key)
+    api_endpoint = "https://api.openai.com/v1/chat/completions"
 
     sys_prompt = f"Преобразуй текст {doc_type} в JSON.\nJSON шаблон: {json_template}"
     prompt = f"{doc_type}: {text}"
 
-    stream = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
+    # stream = client.chat.completions.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[
+    #         {"role": "system", "content": sys_prompt},
+    #         {"role": "user", "content": prompt}
+    #     ],
+    #     stream=True,
+    # )
+
+    headers = {"Authorization": f"Bearer {openai_api_key}", "Content-Type": "application/json"}
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": prompt}
         ],
-        stream=True,
-    )
+        "max_tokens": 2048  # Adjust as needed
+    }
 
-    result = ''
-    for chunk in stream:
-        if chunk.choices[0].delta.content is not None:
-            result += chunk.choices[0].delta.content
+    # result = ''
+    # for chunk in stream:
+    #     if chunk.choices[0].delta.content is not None:
+    #         result += chunk.choices[0].delta.content
+    #
+    # return result
 
-    return result
+    response = requests.post(api_endpoint, headers=headers, json=data)
+
+    # Check for a successful response
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.text)
+        raise Exception
+        return None
 
 
 def generate_json_from_file(pdf_file, json_template, openai_api_key, doc_type='резюме'):
