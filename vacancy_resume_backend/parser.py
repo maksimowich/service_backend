@@ -1,5 +1,6 @@
 from io import StringIO
 import requests
+from fastapi import UploadFile
 
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
@@ -8,6 +9,7 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
+from vacancy_resume_backend.config import OPENAI_API_KEY, RESUME, VACANCY
 
 RESUME_JSON_TEMPLATE = """{
     "birth_date": "",
@@ -128,7 +130,7 @@ def get_text(pdf_file):
     return '\n'.join(lines)
 
 
-def generate_json_from_text(text, json_template, openai_api_key, doc_type='резюме'):
+def generate_json_from_text(text, json_template, openai_api_key, doc_type=RESUME):
     # client = OpenAI(api_key=openai_api_key)
     api_endpoint = "https://api.openai.com/v1/chat/completions"
 
@@ -170,10 +172,31 @@ def generate_json_from_text(text, json_template, openai_api_key, doc_type='ре�
         print(f"Error: {response.status_code}")
         print(response.text)
         raise Exception
-        return None
 
 
 def generate_json_from_file(pdf_file, json_template, openai_api_key, doc_type='резюме'):
     text = get_text(pdf_file)
     json = generate_json_from_text(text, json_template, openai_api_key, doc_type)
     return json
+
+
+def get_pdf_file_content(file: UploadFile, doc_type=RESUME):
+    file_content = get_text(file.file)
+
+    if doc_type == RESUME:
+        template = RESUME_JSON_TEMPLATE
+    elif doc_type == VACANCY:
+        template = VACANCY_JSON_TEMPLATE
+    else:
+        raise NameError(f'Unknown doc_type: {doc_type}')
+
+    try:
+        file_content = generate_json_from_text(
+            file_content,
+            template,
+            OPENAI_API_KEY,
+            doc_type)
+    except Exception as exc:
+        print(f'exc: {type(exc)}')
+
+    return file_content
