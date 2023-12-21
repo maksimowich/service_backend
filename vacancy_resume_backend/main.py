@@ -1,14 +1,20 @@
+import enum
 import os
-from fastapi import FastAPI, UploadFile  # , File
-# from fastapi.responses import FileResponse
-# from pathlib import Path
+from enum import Enum
+
+from fastapi import FastAPI, UploadFile
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.pgvector import PGVector
 from langchain.docstore.document import Document
-from vacancy_resume_backend.parser import get_pdf_file_content
-from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, STORAGE_PATH, RESUME, \
-    VACANCY
+from vacancy_resume_backend.parser import get_pdf_file_content, DocType
+from vacancy_resume_backend.config import CONNECTION_STRING, COLLECTION_NAME, OPENAI_API_KEY, STORAGE_PATH
 from vacancy_resume_backend.response import zipfiles
+
+
+class Process(Enum):
+    UPLOADING = 'uploading'
+    SCORING = 'scoring'
+
 
 app = FastAPI()
 
@@ -24,29 +30,29 @@ STORE = PGVector(
 
 @app.post("/upload_resume/")
 async def upload_resume(file: UploadFile):
-    response = await  _process_file(file, doc_type=RESUME)
+    response = await _process_file(file, doc_type=DocType.RESUME, process=Process.UPLOADING)
     return response
 
 
 @app.post("/upload_vacancy/")
 async def upload_vacancy(file: UploadFile):
-    response = await _process_file(file, doc_type=VACANCY)
+    response = await _process_file(file, doc_type=DocType.VACANCY, process=Process.UPLOADING)
     return response
 
 
 @app.get("/score_resume/")
 async def resumes_with_score(file: UploadFile):
-    response = await _process_file(file, doc_type=VACANCY, process='scoring')
+    response = await _process_file(file, doc_type=DocType.VACANCY, process=Process.SCORING)
     return response
 
 
 @app.get("/score_vacancy/")
 async def vacancies_with_score(file: UploadFile):
-    response = await _process_file(file, doc_type=RESUME, process='scoring')
+    response = await _process_file(file, doc_type=DocType.RESUME, process=Process.SCORING)
     return response
 
 
-async def _process_file(file: UploadFile, doc_type=RESUME, process='uploading'):
+async def _process_file(file: UploadFile, doc_type: DocType, process: Process):
     if not file:
         return {"message": "No file uploaded"}
 
@@ -59,14 +65,14 @@ async def _process_file(file: UploadFile, doc_type=RESUME, process='uploading'):
 
     print(file_content)
 
-    if process == 'uploading':
+    if process == Process.UPLOADING:
         path = STORAGE_PATH + str(len(os.listdir(STORAGE_PATH))) + '.pdf'
         doc = Document(page_content=file_content, metadata={'path': path})
         STORE.add_documents([doc])
         with open(path, 'wb') as doc_file:
             doc_file.write(file_bytes)
         return {"message": "File uploaded and saved successfully"}
-    elif process == 'scoring':
+    elif process == Process.SCORING:
         paths = []
         docs_with_score = STORE.similarity_search_with_score(file_content, 10)
         for doc, score in docs_with_score:
@@ -77,6 +83,8 @@ async def _process_file(file: UploadFile, doc_type=RESUME, process='uploading'):
             paths.append(doc.metadata['path'])
         file_response = zipfiles(paths)
         return file_response
+    else:
+        raise NameError(f'Unknown process: {process}')
 
 
 def main():

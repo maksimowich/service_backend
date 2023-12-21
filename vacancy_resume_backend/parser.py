@@ -1,3 +1,4 @@
+from enum import Enum
 from io import StringIO
 import requests
 from fastapi import UploadFile
@@ -9,7 +10,19 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
-from vacancy_resume_backend.config import OPENAI_API_KEY, RESUME, VACANCY
+from vacancy_resume_backend.config import OPENAI_API_KEY
+
+
+class DocType(Enum):
+    RESUME = 'резюме'
+    VACANCY = 'вакансия'
+
+    def template(self):
+        if self == self.RESUME:
+            return RESUME_JSON_TEMPLATE
+        else:
+            return VACANCY_JSON_TEMPLATE
+
 
 RESUME_JSON_TEMPLATE = """{
     "birth_date": "",
@@ -130,38 +143,23 @@ def get_text(pdf_file):
     return '\n'.join(lines)
 
 
-def generate_json_from_text(text, json_template, openai_api_key, doc_type=RESUME):
-    # client = OpenAI(api_key=openai_api_key)
+def generate_json_from_text(text, doc_type: DocType):
     api_endpoint = "https://api.openai.com/v1/chat/completions"
 
-    sys_prompt = f"Преобразуй текст {doc_type} в JSON.\nJSON шаблон: {json_template}"
-    prompt = f"{doc_type}: {text}"
+    json_template = doc_type.template()
 
-    # stream = client.chat.completions.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[
-    #         {"role": "system", "content": sys_prompt},
-    #         {"role": "user", "content": prompt}
-    #     ],
-    #     stream=True,
-    # )
+    sys_prompt = f"Преобразуй текст {doc_type.value} в JSON.\nJSON шаблон: {json_template}"
+    prompt = f"{doc_type.value}: {text}"
 
-    headers = {"Authorization": f"Bearer {openai_api_key}", "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
     data = {
         "model": "gpt-3.5-turbo",
         "messages": [
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": prompt}
         ],
-        "max_tokens": 2048  # Adjust as needed
+        # "max_tokens": 4096  # Adjust as needed
     }
-
-    # result = ''
-    # for chunk in stream:
-    #     if chunk.choices[0].delta.content is not None:
-    #         result += chunk.choices[0].delta.content
-    #
-    # return result
 
     response = requests.post(api_endpoint, headers=headers, json=data)
 
@@ -171,32 +169,19 @@ def generate_json_from_text(text, json_template, openai_api_key, doc_type=RESUME
     else:
         print(f"Error: {response.status_code}")
         print(response.text)
-        raise Exception
+        raise Exception(f"Error: {response.status_code}", response.text)
 
 
-def generate_json_from_file(pdf_file, json_template, openai_api_key, doc_type='резюме'):
-    text = get_text(pdf_file)
-    json = generate_json_from_text(text, json_template, openai_api_key, doc_type)
-    return json
-
-
-def get_pdf_file_content(file: UploadFile, doc_type=RESUME):
+def get_pdf_file_content(file: UploadFile, doc_type: DocType):
     file_content = get_text(file.file)
 
-    if doc_type == RESUME:
-        template = RESUME_JSON_TEMPLATE
-    elif doc_type == VACANCY:
-        template = VACANCY_JSON_TEMPLATE
-    else:
-        raise NameError(f'Unknown doc_type: {doc_type}')
-
     try:
-        file_content = generate_json_from_text(
-            file_content,
-            template,
-            OPENAI_API_KEY,
-            doc_type)
+        file_content = generate_json_from_text(file_content, doc_type)
     except Exception as exc:
         print(f'exc: {type(exc)}')
 
     return file_content
+
+
+if __name__ == '__main__':
+    print(DocType.RESUME.value)
